@@ -21,7 +21,6 @@ func main() {
 		ctx, canel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer canel()
 
-		// c := openf1.New()
 		s, err := getsession.GetSession(ctx)
 		if err != nil {
 			fmt.Println("error:", err)
