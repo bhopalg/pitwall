@@ -7,7 +7,7 @@ import (
 
 func (c *Client) GetSession(ctx context.Context) (*Session, error) {
 	q := url.Values{}
-	q.Set("country_name>", "Belgium")
+	q.Set("country_name", "Belgium")
 	q.Set("session_name", "Sprint")
 	q.Set("year", "2023")
 

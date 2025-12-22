@@ -33,7 +33,7 @@ func main() {
 		}
 
 		fmt.Printf("%s - %s (%s)\n", s.SessionName, s.CircuitName, s.CountryName)
-		fmt.Printf("Starts: %s (UTC)\n", s.DateStart)
+		fmt.Printf("Starts: %s (UTC)\n", s.DateStart.Format(time.RFC1123))
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
