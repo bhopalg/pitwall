@@ -12,7 +12,7 @@ import (
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("useafe: putwall <command>")
-		fmt.Println("commands: next")
+		fmt.Println("commands: get_session")
 		os.Exit(1)
 	}
 
@@ -21,7 +21,7 @@ func main() {
 		ctx, canel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer canel()
 
-		s, err := getsession.GetSession(ctx)
+		s, err := getsession.GetSession(ctx, "Belgium", "Sprint", "2023")
 		if err != nil {
 			fmt.Println("error:", err)
 			return

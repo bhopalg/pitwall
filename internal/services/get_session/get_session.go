@@ -8,9 +8,9 @@ import (
 	"github.com/bhopalg/pitwall/internal/openf1"
 )
 
-func GetSession(ctx context.Context) (*domain.Session, error) {
+func GetSession(ctx context.Context, country_name, session_name, year string) (*domain.Session, error) {
 	c := openf1.New()
-	s, err := c.GetSession(ctx)
+	s, err := c.GetSession(ctx, country_name, session_name, year)
 
 	date_start, err := parseDate(s.DateStart)
 	if err != nil {

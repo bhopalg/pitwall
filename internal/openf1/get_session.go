@@ -5,11 +5,11 @@ import (
 	"net/url"
 )
 
-func (c *Client) GetSession(ctx context.Context) (*Session, error) {
+func (c *Client) GetSession(ctx context.Context, country_name, session_name, year string) (*Session, error) {
 	q := url.Values{}
-	q.Set("country_name", "Belgium")
-	q.Set("session_name", "Sprint")
-	q.Set("year", "2023")
+	q.Set("country_name", country_name)
+	q.Set("session_name", session_name)
+	q.Set("year", year)
 
 	var sessions []Session
 	if err := c.Get(ctx, "/sessions", q, &sessions); err != nil {
