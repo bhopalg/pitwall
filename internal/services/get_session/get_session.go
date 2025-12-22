@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/bhopalg/pitwall/domain"
 	"github.com/bhopalg/pitwall/internal/openf1"
 )
 
-func GetSession(ctx context.Context) (*Session, error) {
+func GetSession(ctx context.Context) (*domain.Session, error) {
 	c := openf1.New()
 	s, err := c.GetSession(ctx)
 
@@ -21,7 +22,7 @@ func GetSession(ctx context.Context) (*Session, error) {
 		return nil, err
 	}
 
-	return &Session{
+	return &domain.Session{
 		SessionKey:  s.SessionKey,
 		SessionName: s.SessionName,
 		DateStart:   *date_start,

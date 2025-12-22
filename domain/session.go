@@ -1,4 +1,4 @@
-package getsession
+package domain
 
 import "time"
 
