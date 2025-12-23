@@ -8,14 +8,16 @@ import (
 	"github.com/bhopalg/pitwall/internal/openf1"
 )
 
-type Service struct {
-	openf1Client openf1.Client
+type SessionProvider interface {
+	GetSession(ctx context.Context, country_name, session_name, year string) (*openf1.Session, error)
 }
 
-func New(openf1Client openf1.Client) *Service {
-	return &Service{
-		openf1Client: openf1Client,
-	}
+type Service struct {
+	openf1Client SessionProvider // Use interface here
+}
+
+func New(openf1Client SessionProvider) *Service {
+	return &Service{openf1Client: openf1Client}
 }
 
 func (s *Service) GetSession(ctx context.Context, country_name, session_name, year string) (*domain.Session, error) {
