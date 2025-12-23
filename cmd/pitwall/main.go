@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bhopalg/pitwall/internal/openf1"
-	getsession "github.com/bhopalg/pitwall/internal/services"
+	"github.com/bhopalg/pitwall/internal/services/getsession"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 		defer canel()
 
 		openf1Client := openf1.New()
-		service := getsession.New(*openf1Client)
+		service := getsession.New(openf1Client)
 		s, err := service.GetSession(ctx, "Belgium", "Sprint", "2023")
 		if err != nil {
 			fmt.Println("error:", err)
