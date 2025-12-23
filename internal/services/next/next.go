@@ -1,4 +1,4 @@
-package getsession
+package next
 
 import (
 	"context"
@@ -8,20 +8,23 @@ import (
 	"github.com/bhopalg/pitwall/utils"
 )
 
-type GetSessionSessionProvider interface {
-	GetSession(ctx context.Context, country_name, session_name, year string) (*openf1.Session, error)
+type NextSessionProivder interface {
+	Next(ctx context.Context) (*openf1.Session, error)
 }
 
-type GetSessionService struct {
-	openf1Client GetSessionSessionProvider // Use interface here
+type NextSessionService struct {
+	openf1Client NextSessionProivder
 }
 
-func New(openf1Client GetSessionSessionProvider) *GetSessionService {
-	return &GetSessionService{openf1Client: openf1Client}
+func New(openf1Client NextSessionProivder) *NextSessionService {
+	return &NextSessionService{openf1Client: openf1Client}
 }
 
-func (s *GetSessionService) GetSession(ctx context.Context, country_name, session_name, year string) (*domain.Session, error) {
-	session, err := s.openf1Client.GetSession(ctx, country_name, session_name, year)
+func (n *NextSessionService) Next(ctx context.Context) (*domain.Session, error) {
+	session, err := n.openf1Client.Next(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	date_start, err := utils.ParseDate(session.DateStart)
 	if err != nil {

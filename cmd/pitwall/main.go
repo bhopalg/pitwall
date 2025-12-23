@@ -24,6 +24,10 @@ func main() {
 	// Note: We define it on the FlagSet, not the global flag package
 
 	switch os.Args[1] {
+	// case "next":
+	// 	ctx, canel := context.WithTimeout(context.Background(), 10*time.Second)
+	// 	defer canel()
+
 	case "get_session":
 		ctx, canel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer canel()
