@@ -11,7 +11,13 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/pitwall",
             "args": [
-                "get_session"
+                "get_session",
+                "--country",
+                "Bahrain",
+                "--type",
+                "Race",
+                "--year",
+                "2024"
             ]
         }
     ]

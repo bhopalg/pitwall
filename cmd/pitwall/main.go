@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"time"
@@ -17,14 +18,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	getSessionCmd := flag.NewFlagSet("get_session", flag.ExitOnError)
+
+	// 2. Define flags for that specific subcommand
+	// Note: We define it on the FlagSet, not the global flag package
+
 	switch os.Args[1] {
 	case "get_session":
 		ctx, canel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer canel()
+		country := getSessionCmd.String("country", "Belgium", "country name for session")
+		session_type := getSessionCmd.String("type", "Sprint", "session type e.g. Sprint, Race")
+		session_year := getSessionCmd.String("year", "2023", "session year")
+
+		getSessionCmd.Parse(os.Args[2:])
 
 		openf1Client := openf1.New()
 		service := getsession.New(openf1Client)
-		s, err := service.GetSession(ctx, "Belgium", "Sprint", "2023")
+		s, err := service.GetSession(ctx, *country, *session_type, *session_year)
 		if err != nil {
 			fmt.Println("error:", err)
 			return
