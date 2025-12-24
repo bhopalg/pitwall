@@ -27,7 +27,7 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/pitwall",
             "args": [
-                "next"
+                "latest"
             ]
         }
     ]

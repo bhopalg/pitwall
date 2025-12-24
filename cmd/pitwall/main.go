@@ -9,7 +9,7 @@ import (
 
 	"github.com/bhopalg/pitwall/internal/openf1"
 	"github.com/bhopalg/pitwall/internal/services/getsession"
-	"github.com/bhopalg/pitwall/internal/services/next"
+	"github.com/bhopalg/pitwall/internal/services/latest"
 )
 
 func main() {
@@ -21,16 +21,13 @@ func main() {
 
 	getSessionCmd := flag.NewFlagSet("get_session", flag.ExitOnError)
 
-	// 2. Define flags for that specific subcommand
-	// Note: We define it on the FlagSet, not the global flag package
-
 	switch os.Args[1] {
-	case "next":
+	case "latest":
 		ctx, canel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer canel()
 
 		openf1Client := openf1.New()
-		service := next.New(openf1Client)
+		service := latest.New(openf1Client)
 		s, err := service.Next(ctx)
 		if err != nil {
 			fmt.Println("error:", err)
