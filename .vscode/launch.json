@@ -29,6 +29,20 @@
             "args": [
                 "latest"
             ]
+        },
+        {
+            "name": "Weekend",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/pitwall",
+            "args": [
+                "weekend",
+                "--country",
+                "Belgium",
+                "--year",
+                "2024"
+            ]
         }
     ]
 }
