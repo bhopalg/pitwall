@@ -8,7 +8,11 @@ import (
 func (c *Client) GetSession(ctx context.Context, country_name, session_name, year string) (*Session, error) {
 	q := url.Values{}
 	q.Set("country_name", country_name)
-	q.Set("session_name", session_name)
+
+	if session_name != "" {
+		q.Set("session_name", session_name)
+	}
+
 	q.Set("year", year)
 
 	var sessions []Session
