@@ -1,7 +1,14 @@
 package utils
 
 import (
+	"bytes"
+	"io"
+	"os"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/bhopalg/pitwall/domain"
 )
 
 func TestParseDate(t *testing.T) {
@@ -50,6 +57,82 @@ func TestParseDate(t *testing.T) {
 			// If no error was expected, ensure the pointer isn't nil
 			if !tt.wantErr && got == nil {
 				t.Error("ParseDate() returned nil for a valid input")
+			}
+		})
+	}
+}
+
+func TestPrintSessionStatus(t *testing.T) {
+	// Baseline: Saturday 29 July 2023, 14:00 UTC
+	start := time.Date(2023, 7, 29, 14, 0, 0, 0, time.UTC)
+	end := time.Date(2023, 7, 29, 16, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name           string
+		session        *domain.Session
+		now            time.Time
+		expectedOutput []string
+	}{
+		{
+			name: "Future Session",
+			session: &domain.Session{
+				DateStart: start,
+				DateEnd:   end,
+			},
+			now: start.Add(-2 * time.Hour).Add(-14 * time.Minute),
+			expectedOutput: []string{
+				"Status: Future",
+				"Starts at: Sat 29 Jul 2023, 15:00 (UK)",
+				"Starts in: 2h 14m",
+			},
+		},
+		{
+			name: "Live Session",
+			session: &domain.Session{
+				DateStart: start,
+				DateEnd:   end,
+			},
+			now: start.Add(1 * time.Hour).Add(42 * time.Minute),
+			expectedOutput: []string{
+				"Status: Live",
+				"Ends at: 17:00 (UK)",
+				"Ends in: 0h 18m",
+			},
+		},
+		{
+			name: "Finished Session",
+			session: &domain.Session{
+				DateStart: start,
+				DateEnd:   end,
+			},
+			now: end.Add(1 * time.Hour).Add(42 * time.Minute),
+			expectedOutput: []string{
+				"Status: Finished",
+				"Ended at: 17:00 (UK)",
+				"Ended: 1h 42m ago",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			oldStdout := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+
+			PrintSessionStatus(tt.session, tt.now)
+
+			w.Close()
+			os.Stdout = oldStdout
+
+			var buf bytes.Buffer
+			io.Copy(&buf, r)
+			output := buf.String()
+
+			for _, expected := range tt.expectedOutput {
+				if !strings.Contains(output, expected) {
+					t.Errorf("Expected output to contain %q, but got:\n%s", expected, output)
+				}
 			}
 		})
 	}
