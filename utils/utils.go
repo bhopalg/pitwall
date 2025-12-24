@@ -49,9 +49,12 @@ func PrintSessionStatus(s *domain.Session, now time.Time) {
 }
 
 func formatDuration(d time.Duration) string {
-	h := d / time.Hour
-	d -= h * time.Hour
-	m := d / time.Minute
+	days := int(d.Hours()) / 24
+	h := int(d.Hours()) % 24
+	m := int(d.Minutes()) % 60
 
+	if days > 0 {
+		return fmt.Sprintf("%dd %dh %dm", days, h, m)
+	}
 	return fmt.Sprintf("%dh %dm", h, m)
 }

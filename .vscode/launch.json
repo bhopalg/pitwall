@@ -21,7 +21,7 @@
             ]
         },
         {
-            "name": "Next",
+            "name": "Latest",
             "type": "go",
             "request": "launch",
             "mode": "auto",

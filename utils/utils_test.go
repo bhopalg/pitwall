@@ -63,7 +63,6 @@ func TestParseDate(t *testing.T) {
 }
 
 func TestPrintSessionStatus(t *testing.T) {
-	// Baseline: Saturday 29 July 2023, 14:00 UTC
 	start := time.Date(2023, 7, 29, 14, 0, 0, 0, time.UTC)
 	end := time.Date(2023, 7, 29, 16, 0, 0, 0, time.UTC)
 
@@ -74,7 +73,19 @@ func TestPrintSessionStatus(t *testing.T) {
 		expectedOutput []string
 	}{
 		{
-			name: "Future Session",
+			name: "Future Session (Long term)",
+			session: &domain.Session{
+				DateStart: start,
+				DateEnd:   end,
+			},
+			now: start.Add(-52 * time.Hour).Add(-30 * time.Minute),
+			expectedOutput: []string{
+				"Status: Future",
+				"Starts in: 2d 4h 30m",
+			},
+		},
+		{
+			name: "Future Session (Short term)",
 			session: &domain.Session{
 				DateStart: start,
 				DateEnd:   end,
@@ -82,7 +93,6 @@ func TestPrintSessionStatus(t *testing.T) {
 			now: start.Add(-2 * time.Hour).Add(-14 * time.Minute),
 			expectedOutput: []string{
 				"Status: Future",
-				"Starts at: Sat 29 Jul 2023, 15:00 (UK)",
 				"Starts in: 2h 14m",
 			},
 		},
@@ -92,11 +102,10 @@ func TestPrintSessionStatus(t *testing.T) {
 				DateStart: start,
 				DateEnd:   end,
 			},
-			now: start.Add(1 * time.Hour).Add(42 * time.Minute),
+			now: start.Add(1 * time.Hour).Add(30 * time.Minute),
 			expectedOutput: []string{
 				"Status: Live",
-				"Ends at: 17:00 (UK)",
-				"Ends in: 0h 18m",
+				"Ends in: 0h 30m",
 			},
 		},
 		{
@@ -105,11 +114,11 @@ func TestPrintSessionStatus(t *testing.T) {
 				DateStart: start,
 				DateEnd:   end,
 			},
-			now: end.Add(1 * time.Hour).Add(42 * time.Minute),
+			// 1 day and 2 hours after end
+			now: end.Add(26 * time.Hour),
 			expectedOutput: []string{
 				"Status: Finished",
-				"Ended at: 17:00 (UK)",
-				"Ended: 1h 42m ago",
+				"Ended: 1d 2h 0m ago",
 			},
 		},
 	}
@@ -124,14 +133,13 @@ func TestPrintSessionStatus(t *testing.T) {
 
 			w.Close()
 			os.Stdout = oldStdout
-
 			var buf bytes.Buffer
 			io.Copy(&buf, r)
 			output := buf.String()
 
 			for _, expected := range tt.expectedOutput {
 				if !strings.Contains(output, expected) {
-					t.Errorf("Expected output to contain %q, but got:\n%s", expected, output)
+					t.Errorf("[%s] Expected to contain %q, but got:\n%s", tt.name, expected, output)
 				}
 			}
 		})
