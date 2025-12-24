@@ -2,6 +2,7 @@ package getsession
 
 import (
 	"context"
+	"time"
 
 	"github.com/bhopalg/pitwall/domain"
 	"github.com/bhopalg/pitwall/internal/openf1"
@@ -33,7 +34,7 @@ func (s *GetSessionService) GetSession(ctx context.Context, country_name, sessio
 		return nil, err
 	}
 
-	return &domain.Session{
+	mappedSession := &domain.Session{
 		SessionKey:  session.SessionKey,
 		SessionName: session.SessionName,
 		DateStart:   *date_start,
@@ -43,5 +44,10 @@ func (s *GetSessionService) GetSession(ctx context.Context, country_name, sessio
 		CircuitName: session.CircuitName,
 		MeetingKey:  session.MeetingKey,
 		Year:        session.Year,
-	}, err
+	}
+
+	now := time.Now().UTC()
+	mappedSession.SessionState = mappedSession.State(now)
+
+	return mappedSession, nil
 }

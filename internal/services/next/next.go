@@ -2,6 +2,7 @@ package next
 
 import (
 	"context"
+	"time"
 
 	"github.com/bhopalg/pitwall/domain"
 	"github.com/bhopalg/pitwall/internal/openf1"
@@ -36,7 +37,7 @@ func (n *NextSessionService) Next(ctx context.Context) (*domain.Session, error) 
 		return nil, err
 	}
 
-	return &domain.Session{
+	mappedSession := &domain.Session{
 		SessionKey:  session.SessionKey,
 		SessionName: session.SessionName,
 		DateStart:   *date_start,
@@ -46,5 +47,10 @@ func (n *NextSessionService) Next(ctx context.Context) (*domain.Session, error) 
 		CircuitName: session.CircuitName,
 		MeetingKey:  session.MeetingKey,
 		Year:        session.Year,
-	}, err
+	}
+
+	now := time.Now().UTC()
+	mappedSession.SessionState = mappedSession.State(now)
+
+	return mappedSession, nil
 }
