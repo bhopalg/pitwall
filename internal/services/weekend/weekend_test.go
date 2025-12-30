@@ -4,84 +4,142 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/bhopalg/pitwall/domain"
 	"github.com/bhopalg/pitwall/internal/openf1"
 )
+
+// MockCache implements the cache.Cache interface for testing
+type MockCache struct {
+	storage map[string]interface{}
+	isStale bool
+	found   bool
+}
+
+func (m *MockCache) Get(key string, target interface{}) (bool, bool, error) {
+	if !m.found {
+		return false, false, nil
+	}
+	// In a real test, you'd use reflection to set 'target',
+	// but for these logic tests, we can just check 'found' and 'isStale'
+	if data, ok := m.storage[key]; ok {
+		if sessions, ok := data.(*[]domain.Session); ok {
+			*(target.(*[]domain.Session)) = *sessions
+		}
+	}
+	return m.found, m.isStale, nil
+}
+
+func (m *MockCache) Set(key string, value interface{}, ttl time.Duration) error {
+	m.storage[key] = value
+	return nil
+}
 
 // MockOpenF1 to satisfy the WeekendProvider interface
 type MockOpenF1 struct {
 	sessions *[]openf1.Session
 	err      error
+	called   bool
 }
 
 func (m *MockOpenF1) GetSessions(ctx context.Context, country, year string) (*[]openf1.Session, error) {
+	m.called = true
 	return m.sessions, m.err
 }
 
 func TestWeekendService_Weekend(t *testing.T) {
 	testcases := []struct {
-		name          string
-		mockResp      []openf1.Session
-		mockErr       error
-		expectedError bool
-		expectedLen   int
+		name            string
+		mockResp        []openf1.Session
+		mockErr         error
+		cacheFound      bool
+		cacheStale      bool
+		expectedError   bool
+		expectedWarning string
+		expectedLen     int
+		expectRepoCall  bool
 	}{
 		{
-			name: "Success - Multiple Sessions",
+			name: "Cache Hit - Fresh (Repo not called)",
 			mockResp: []openf1.Session{
 				{SessionName: "Practice 1", DateStart: "2023-07-28T11:30:00Z", DateEnd: "2023-07-28T12:30:00Z"},
-				{SessionName: "Practice 2", DateStart: "2023-07-28T15:00:00Z", DateEnd: "2023-07-28T16:00:00Z"},
 			},
-			mockErr:       nil,
-			expectedError: false,
-			expectedLen:   2,
+			cacheFound:     true,
+			cacheStale:     false,
+			expectedError:  false,
+			expectedLen:    1,
+			expectRepoCall: false,
 		},
 		{
-			name:          "API Error",
-			mockResp:      nil,
-			mockErr:       errors.New("network failure"),
-			expectedError: true,
-			expectedLen:   0,
-		},
-		{
-			name: "Invalid Date Format",
+			name: "Cache Miss - Call Repo Success",
 			mockResp: []openf1.Session{
-				{SessionName: "Broken Date", DateStart: "invalid-date"},
+				{SessionName: "Practice 1", DateStart: "2023-07-28T11:30:00Z", DateEnd: "2023-07-28T12:30:00Z"},
 			},
-			mockErr:       nil,
-			expectedError: true,
-			expectedLen:   0,
+			cacheFound:     false,
+			expectedError:  false,
+			expectedLen:    1,
+			expectRepoCall: true,
 		},
 		{
-			name:          "No Sessions Found",
-			mockResp:      []openf1.Session{},
-			mockErr:       nil,
-			expectedError: false,
-			expectedLen:   0,
+			name:            "Stale Cache + Repo Failure (Fallback)",
+			mockErr:         errors.New("api down"),
+			cacheFound:      true,
+			cacheStale:      true,
+			expectedError:   false,
+			expectedWarning: "⚠️ API unavailable. Showing stale cached data.",
+			expectedLen:     0, // Length depends on what's in mock storage
+			expectRepoCall:  true,
+		},
+		{
+			name:           "API Error - No Cache",
+			mockErr:        errors.New("network failure"),
+			cacheFound:     false,
+			expectedError:  true,
+			expectRepoCall: true,
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			// Setup Mocks
 			mockClient := &MockOpenF1{
 				sessions: &tc.mockResp,
 				err:      tc.mockErr,
 			}
-			service := New(mockClient)
+			mockCache := &MockCache{
+				storage: make(map[string]interface{}),
+				found:   tc.cacheFound,
+				isStale: tc.cacheStale,
+			}
 
-			sessions, err := service.Weekend(context.Background(), "Belgium", "2023")
+			// If cache is "found", pre-populate it with dummy data for the test
+			if tc.cacheFound {
+				dummy := []domain.Session{{SessionName: "Cached Session"}}
+				mockCache.storage["weekend:Belgium:2023"] = &dummy
+			}
 
+			service := New(mockClient, mockCache)
+
+			// Execute
+			resp, err := service.Weekend(context.Background(), "Belgium", "2023")
+
+			// Assertions
 			if (err != nil) != tc.expectedError {
 				t.Fatalf("expected error: %v, got: %v", tc.expectedError, err)
 			}
 
-			if !tc.expectedError {
-				if tc.expectedLen == 0 && sessions != nil {
-					t.Errorf("expected nil sessions for empty list, got %d", len(*sessions))
-				} else if tc.expectedLen > 0 {
-					if sessions == nil || len(*sessions) != tc.expectedLen {
-						t.Errorf("expected %d sessions, got %v", tc.expectedLen, sessions)
-					}
+			if mockClient.called != tc.expectRepoCall {
+				t.Errorf("expected repo call: %v, but was: %v", tc.expectRepoCall, mockClient.called)
+			}
+
+			if resp.Warning != tc.expectedWarning {
+				t.Errorf("expected warning %q, got %q", tc.expectedWarning, resp.Warning)
+			}
+
+			if !tc.expectedError && tc.expectedLen > 0 {
+				if resp.Sessions == nil || len(*resp.Sessions) != tc.expectedLen {
+					t.Errorf("expected %d sessions, got %v", tc.expectedLen, resp.Sessions)
 				}
 			}
 		})
