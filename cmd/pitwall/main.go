@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bhopalg/pitwall/domain"
+	"github.com/bhopalg/pitwall/internal/cache"
 	"github.com/bhopalg/pitwall/internal/openf1"
 	"github.com/bhopalg/pitwall/internal/services/getsession"
 	"github.com/bhopalg/pitwall/internal/services/latest"
@@ -38,22 +39,29 @@ func main() {
 
 		getSessionCmd.Parse(os.Args[2:])
 
-		service := weekend.New(openf1Client)
+		fileCache := &cache.FileCache{Dir: "../../.pitwall_cache"}
+
+		service := weekend.New(openf1Client, fileCache)
 		sessions, err := service.Weekend(ctx, *country, *session_year)
+
 		if err != nil {
 			fmt.Println("error:", err)
 			return
 		}
 
-		if sessions == nil || len(*sessions) == 0 {
+		if sessions.Sessions != nil && sessions.Warning != "" {
+			fmt.Println(sessions.Warning)
+		}
+
+		if sessions.Sessions == nil || len(*sessions.Sessions) == 0 {
 			fmt.Println("No sessions found.")
 			return
 		}
 
-		firstSession := (*sessions)[0]
+		firstSession := (*sessions.Sessions)[0]
 		fmt.Printf("%s Grand Prix - %s\n\n", firstSession.CountryName, firstSession.CircuitName)
 
-		groupSessions := createWeekendGroup(*sessions)
+		groupSessions := createWeekendGroup(*sessions.Sessions)
 
 		orderedDays := []string{"Fri", "Sat", "Sun"}
 
