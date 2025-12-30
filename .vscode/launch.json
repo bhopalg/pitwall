@@ -65,6 +65,16 @@
                 "cache",
                 "info"
             ]
+        },
+        {
+            "name": "Remind",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/pitwall",
+            "args": [
+                "remind"
+            ]
         }
     ]
 }

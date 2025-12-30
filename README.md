@@ -17,6 +17,7 @@ Pitwall is a Go-based command-line interface (CLI) tool designed to provide Form
 
 ```text
 .
+├── .pitwall_cache        # Cache file for storing session data
 ├── cmd/pitwall/          # Main entry point & CLI routing
 ├── domain/               # Domain entities (Session) and Business Logic
 ├── internal/
@@ -25,6 +26,8 @@ Pitwall is a Go-based command-line interface (CLI) tool designed to provide Form
 │       ├── getsession/   # GetSession service & UI formatting
 │       └── latest/       # Logic for fetching the current/next session
 │       └── weekend/      # Logic for fetching weekend sessions
+│       └── cache/        # Logic for cache management
+        └── remind/       # Reminder service for upcoming sessions
 └── utils/                # Shared utilities (Date parsing, formatting)
 ```
 
@@ -58,6 +61,21 @@ go build -o pitwall ./cmd/pitwall
 #### Find a specific weekend:
 ```bash
 ./pitwall weekend --country Belgium --year 2023
+```
+
+#### Clear the cache:
+```bash
+./pitwall cache clear
+```
+
+#### Information about the cache:
+```bash
+./pitwall cache info
+```
+
+|### Reminder for upcoming sessions:
+```bash
+./pitwall remind
 ```
 
 ## 🛠️ Development

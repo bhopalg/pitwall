@@ -12,6 +12,7 @@ import (
 	"github.com/bhopalg/pitwall/internal/openf1"
 	"github.com/bhopalg/pitwall/internal/services/getsession"
 	"github.com/bhopalg/pitwall/internal/services/latest"
+	"github.com/bhopalg/pitwall/internal/services/remind"
 	"github.com/bhopalg/pitwall/internal/services/weekend"
 	"github.com/bhopalg/pitwall/utils"
 )
@@ -34,6 +35,40 @@ func main() {
 	openf1Client := openf1.New()
 
 	switch os.Args[1] {
+	case "remind":
+		remindCmd := flag.NewFlagSet("remind", flag.ExitOnError)
+		threshold := remindCmd.Int("minutes", 30, "minutes threshold for reminder")
+		quiet := remindCmd.Bool("quiet", false, "suppress output if no reminder")
+
+		remindCmd.Parse(os.Args[2:])
+
+		service := latest.New(openf1Client, fileCache)
+		res, err := service.Next(ctx)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(2)
+		}
+
+		if res.Session == nil {
+			if !*quiet {
+				fmt.Println("No upcoming sessions found.")
+			}
+			os.Exit(1)
+		}
+
+		trigger, diff := remind.ShouldRemind(now, res.Session.DateStart, *threshold)
+
+		if trigger {
+			fmt.Printf("REMIND: %s starts in %v!\n", res.Session.SessionName, diff.Round(time.Minute))
+			os.Exit(0)
+		}
+
+		if !*quiet {
+			fmt.Printf("No reminder needed. Next session (%s) is in %v.\n",
+				res.Session.SessionName, diff.Round(time.Minute))
+		}
+		os.Exit(1)
 	case "cache":
 		if len(os.Args) < 3 {
 			fmt.Println("usage: pitwall cache <info|clear>")
