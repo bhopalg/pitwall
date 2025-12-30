@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bhopalg/pitwall/domain"
+	"github.com/bhopalg/pitwall/internal/cache"
 	"github.com/bhopalg/pitwall/internal/openf1"
 )
 
@@ -21,8 +22,6 @@ func (m *MockCache) Get(key string, target interface{}) (bool, bool, error) {
 	if !m.found {
 		return false, false, nil
 	}
-	// In a real test, you'd use reflection to set 'target',
-	// but for these logic tests, we can just check 'found' and 'isStale'
 	if data, ok := m.storage[key]; ok {
 		if sessions, ok := data.(*[]domain.Session); ok {
 			*(target.(*[]domain.Session)) = *sessions
@@ -36,7 +35,15 @@ func (m *MockCache) Set(key string, value interface{}, ttl time.Duration) error 
 	return nil
 }
 
-// MockOpenF1 to satisfy the WeekendProvider interface
+func (m *MockCache) Clear() (int, error) {
+	m.storage = make(map[string]interface{})
+	return 0, nil
+}
+
+func (m *MockCache) Info() ([]cache.InfoEntry, string, error) {
+	return []cache.InfoEntry{}, "", nil
+}
+
 type MockOpenF1 struct {
 	sessions *[]openf1.Session
 	err      error

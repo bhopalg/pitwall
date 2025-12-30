@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bhopalg/pitwall/domain"
+	"github.com/bhopalg/pitwall/internal/cache"
 	"github.com/bhopalg/pitwall/internal/openf1"
 )
 
@@ -30,6 +31,15 @@ func (m *mockCache) Get(key string, target interface{}) (bool, bool, error) {
 
 func (m *mockCache) Set(key string, value interface{}, ttl time.Duration) error {
 	return nil
+}
+
+func (m *mockCache) Clear() (int, error) {
+	m.storage = make(map[string]interface{})
+	return 0, nil
+}
+
+func (m *mockCache) Info() ([]cache.InfoEntry, string, error) {
+	return []cache.InfoEntry{}, "", nil
 }
 
 type mockClient struct {
