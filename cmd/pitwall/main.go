@@ -24,6 +24,7 @@ func main() {
 	}
 
 	now := time.Now().UTC()
+	fileCache := &cache.FileCache{Dir: "../../.pitwall_cache"}
 
 	getSessionCmd := flag.NewFlagSet("get_session", flag.ExitOnError)
 
@@ -38,8 +39,6 @@ func main() {
 		session_year := getSessionCmd.String("year", "2023", "session year")
 
 		getSessionCmd.Parse(os.Args[2:])
-
-		fileCache := &cache.FileCache{Dir: "../../.pitwall_cache"}
 
 		service := weekend.New(openf1Client, fileCache)
 		sessions, err := service.Weekend(ctx, *country, *session_year)
@@ -76,20 +75,20 @@ func main() {
 		}
 
 	case "latest":
-		service := latest.New(openf1Client)
+		service := latest.New(openf1Client, fileCache)
 		s, err := service.Next(ctx)
 		if err != nil {
 			fmt.Println("error:", err)
 			return
 		}
 
-		if s == nil {
+		if s.Session == nil {
 			fmt.Println("No session found.")
 			return
 		}
 
-		fmt.Printf("%s - %s (%s)\n", s.SessionName, s.CircuitName, s.CountryName)
-		utils.PrintSessionStatus(s, now)
+		fmt.Printf("%s - %s (%s)\n", s.Session.SessionName, s.Session.CircuitName, s.Session.CountryName)
+		utils.PrintSessionStatus(s.Session, now)
 
 	case "get_session":
 		country := getSessionCmd.String("country", "Belgium", "country name for session")
@@ -98,13 +97,15 @@ func main() {
 
 		getSessionCmd.Parse(os.Args[2:])
 
-		fileCache := &cache.FileCache{Dir: "../../.pitwall_cache"}
-
 		service := getsession.New(openf1Client, fileCache)
 		s, err := service.GetSession(ctx, *country, *session_type, *session_year)
 		if err != nil {
 			fmt.Println("error:", err)
 			return
+		}
+
+		if s.Session != nil && s.Warning != "" {
+			fmt.Println(s.Warning)
 		}
 
 		if s.Session == nil {
