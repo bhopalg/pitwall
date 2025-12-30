@@ -56,49 +56,20 @@ func (w *WeekendService) Weekend(ctx context.Context, country_name, year string)
 		return WeekendResponse{}, err
 	}
 
-	sessions := mapToDomain(apiSessions)
+	var sessions []domain.Session
+	for _, session := range *apiSessions {
+		s, err := utils.MapToDomain(&session)
+		if err != nil {
+			log.Printf("error mapping session: %v", err)
+			continue
+		}
+		sessions = append(sessions, *s)
+	}
 
-	if len(*sessions) == 0 {
+	if len(sessions) == 0 {
 		return WeekendResponse{}, nil
 	}
 
 	_ = w.cache.Set(cacheKey, sessions, 24*time.Hour)
-	return WeekendResponse{Sessions: sessions}, nil
-}
-
-func mapToDomain(apiSession *[]openf1.Session) *[]domain.Session {
-	now := time.Now().UTC()
-
-	var sessions []domain.Session
-	for _, session := range *apiSession {
-		date_start, err := utils.ParseDate(session.DateStart)
-		if err != nil {
-			log.Printf("error parsing date: %v", err)
-			continue
-		}
-
-		date_end, err := utils.ParseDate(session.DateEnd)
-		if err != nil {
-			log.Printf("error parsing date: %v", err)
-			continue
-		}
-
-		mappedSession := domain.Session{
-			SessionKey:  session.SessionKey,
-			SessionName: session.SessionName,
-			DateStart:   *date_start,
-			DateEnd:     *date_end,
-			Location:    session.Location,
-			CountryName: session.CountryName,
-			CircuitName: session.CircuitName,
-			MeetingKey:  session.MeetingKey,
-			Year:        session.Year,
-		}
-
-		mappedSession.SessionState = mappedSession.State(now)
-
-		sessions = append(sessions, mappedSession)
-	}
-
-	return &sessions
+	return WeekendResponse{Sessions: &sessions}, nil
 }

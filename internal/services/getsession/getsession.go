@@ -52,7 +52,7 @@ func (s *GetSessionService) GetSession(ctx context.Context, country_name, sessio
 		return GetSessionResponse{}, err
 	}
 
-	mappedSession, err := mapToDomain(session)
+	mappedSession, err := utils.MapToDomain(session)
 	if err != nil {
 		return GetSessionResponse{}, err
 	}
@@ -61,33 +61,4 @@ func (s *GetSessionService) GetSession(ctx context.Context, country_name, sessio
 	return GetSessionResponse{
 		Session: mappedSession,
 	}, nil
-}
-
-func mapToDomain(apiSession *openf1.Session) (*domain.Session, error) {
-	date_start, err := utils.ParseDate(apiSession.DateStart)
-	if err != nil {
-		return nil, err
-	}
-
-	date_end, err := utils.ParseDate(apiSession.DateEnd)
-	if err != nil {
-		return nil, err
-	}
-
-	mappedSession := &domain.Session{
-		SessionKey:  apiSession.SessionKey,
-		SessionName: apiSession.SessionName,
-		DateStart:   *date_start,
-		DateEnd:     *date_end,
-		Location:    apiSession.Location,
-		CountryName: apiSession.CountryName,
-		CircuitName: apiSession.CircuitName,
-		MeetingKey:  apiSession.MeetingKey,
-		Year:        apiSession.Year,
-	}
-
-	now := time.Now().UTC()
-	mappedSession.SessionState = mappedSession.State(now)
-
-	return mappedSession, nil
 }

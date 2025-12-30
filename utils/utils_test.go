@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/bhopalg/pitwall/domain"
+	"github.com/bhopalg/pitwall/internal/openf1"
 )
 
 func TestParseDate(t *testing.T) {
@@ -140,6 +141,77 @@ func TestPrintSessionStatus(t *testing.T) {
 			for _, expected := range tt.expectedOutput {
 				if !strings.Contains(output, expected) {
 					t.Errorf("[%s] Expected to contain %q, but got:\n%s", tt.name, expected, output)
+				}
+			}
+		})
+	}
+}
+
+func TestMapToDomain(t *testing.T) {
+	testcases := []struct {
+		name          string
+		input         *openf1.Session
+		expectedError bool
+		expectedName  string
+		expectedState domain.SessionState
+	}{
+		{
+			name: "Successful mapping with all fields",
+			input: &openf1.Session{
+				SessionKey:  9141,
+				SessionName: "Race",
+				DateStart:   "2023-07-30T13:00:00Z",
+				DateEnd:     "2023-07-30T15:00:00Z",
+				Location:    "Spa-Francorchamps",
+				CountryName: "Belgium",
+				CircuitName: "Spa-Francorchamps",
+				MeetingKey:  1216,
+				Year:        2023,
+			},
+			expectedError: false,
+			expectedName:  "Race",
+		},
+		{
+			name: "Fail on invalid start date",
+			input: &openf1.Session{
+				DateStart: "invalid-date",
+				DateEnd:   "2023-07-30T15:00:00Z",
+			},
+			expectedError: true,
+		},
+		{
+			name: "Fail on invalid end date",
+			input: &openf1.Session{
+				DateStart: "2023-07-30T13:00:00Z",
+				DateEnd:   "broken",
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := MapToDomain(tc.input)
+
+			if (err != nil) != tc.expectedError {
+				t.Fatalf("MapToDomain() error = %v, expectedError %v", err, tc.expectedError)
+			}
+
+			if !tc.expectedError {
+				if got.SessionName != tc.expectedName {
+					t.Errorf("Expected name %s, got %s", tc.expectedName, got.SessionName)
+				}
+
+				if got.SessionKey != tc.input.SessionKey {
+					t.Errorf("Expected Key %d, got %d", tc.input.SessionKey, got.SessionKey)
+				}
+
+				if got.DateStart.Location() != time.UTC {
+					t.Error("Expected DateStart to be in UTC")
+				}
+
+				if got.SessionState == "" {
+					t.Error("Expected SessionState to be populated, but it was empty")
 				}
 			}
 		})

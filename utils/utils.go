@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bhopalg/pitwall/domain"
+	"github.com/bhopalg/pitwall/internal/openf1"
 )
 
 func ParseDate(date string) (*time.Time, error) {
@@ -57,4 +58,33 @@ func formatDuration(d time.Duration) string {
 		return fmt.Sprintf("%dd %dh %dm", days, h, m)
 	}
 	return fmt.Sprintf("%dh %dm", h, m)
+}
+
+func MapToDomain(apiSession *openf1.Session) (*domain.Session, error) {
+	date_start, err := ParseDate(apiSession.DateStart)
+	if err != nil {
+		return nil, err
+	}
+
+	date_end, err := ParseDate(apiSession.DateEnd)
+	if err != nil {
+		return nil, err
+	}
+
+	mappedSession := &domain.Session{
+		SessionKey:  apiSession.SessionKey,
+		SessionName: apiSession.SessionName,
+		DateStart:   *date_start,
+		DateEnd:     *date_end,
+		Location:    apiSession.Location,
+		CountryName: apiSession.CountryName,
+		CircuitName: apiSession.CircuitName,
+		MeetingKey:  apiSession.MeetingKey,
+		Year:        apiSession.Year,
+	}
+
+	now := time.Now().UTC()
+	mappedSession.SessionState = mappedSession.State(now)
+
+	return mappedSession, nil
 }
