@@ -24,6 +24,7 @@ Pitwall is a Go-based command-line interface (CLI) tool designed to provide Form
 │   └── services/
 │       ├── getsession/   # GetSession service & UI formatting
 │       └── latest/       # Logic for fetching the current/next session
+│       └── weekend/      # Logic for fetching weekend sessions
 └── utils/                # Shared utilities (Date parsing, formatting)
 ```
 
