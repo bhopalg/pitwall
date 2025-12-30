@@ -34,6 +34,55 @@ func main() {
 	openf1Client := openf1.New()
 
 	switch os.Args[1] {
+	case "cache":
+		if len(os.Args) < 3 {
+			fmt.Println("usage: pitwall cache <info|clear>")
+			return
+		}
+
+		subCommand := os.Args[2]
+
+		switch subCommand {
+		case "info":
+			entries, path, err := fileCache.Info()
+			if err != nil {
+				fmt.Printf("Error reading cache: %v\n", err)
+				return
+			}
+
+			fmt.Printf("Cache Location: %s\n", path)
+			fmt.Printf("Total Entries:  %d\n\n", len(entries))
+
+			if len(entries) > 0 {
+				fmt.Printf("%-30s %-20s %-10s %-10s\n", "KEY", "CREATED AT", "STALE", "SIZE")
+				for _, e := range entries {
+					staleStr := "no"
+					if e.IsStale {
+						staleStr = "YES"
+					}
+					fmt.Printf("%-30s %-20s %-10s %-10d B\n",
+						e.Key,
+						e.CreatedAt.Format("02 Jan 15:04"),
+						staleStr,
+						e.Size,
+					)
+				}
+			}
+		case "clear":
+			count, err := fileCache.Clear()
+			if err != nil {
+				fmt.Printf("Error clearing cache: %v\n", err)
+				return
+			}
+			if count == 0 {
+				fmt.Println("Nothing to clear.")
+			} else {
+				fmt.Printf("Successfully removed %d cache entries.\n", count)
+			}
+		default:
+			fmt.Printf("unknown cache command: %s\n", subCommand)
+		}
+
 	case "weekend":
 		country := getSessionCmd.String("country", "Belgium", "country name for session")
 		session_year := getSessionCmd.String("year", "2023", "session year")

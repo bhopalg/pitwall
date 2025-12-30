@@ -43,6 +43,28 @@
                 "--year",
                 "2024"
             ]
+        },
+        {
+            "name": "Cache Clear",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/pitwall",
+            "args": [
+                "cache",
+                "clear"
+            ]
+        },
+        {
+            "name": "Cache Info",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/pitwall",
+            "args": [
+                "cache",
+                "info"
+            ]
         }
     ]
 }
