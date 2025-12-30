@@ -2,7 +2,7 @@ package weekend
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/bhopalg/pitwall/domain"
@@ -73,13 +73,13 @@ func mapToDomain(apiSession *[]openf1.Session) *[]domain.Session {
 	for _, session := range *apiSession {
 		date_start, err := utils.ParseDate(session.DateStart)
 		if err != nil {
-			fmt.Errorf("error parsing date: %v", err)
+			log.Printf("error parsing date: %v", err)
 			continue
 		}
 
 		date_end, err := utils.ParseDate(session.DateEnd)
 		if err != nil {
-			fmt.Errorf("error parsing date: %v", err)
+			log.Printf("error parsing date: %v", err)
 			continue
 		}
 
