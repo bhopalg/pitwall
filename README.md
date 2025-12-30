@@ -54,6 +54,11 @@ go build -o pitwall ./cmd/pitwall
 ./pitwall get_session --country Belgium --type Race --year 2023
 ```
 
+#### Find a specific weekend:
+```bash
+./pitwall weekend --country Belgium --year 2023
+```
+
 ## 🛠️ Development
 
 ### Running Tests
