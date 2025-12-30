@@ -98,20 +98,26 @@ func main() {
 
 		getSessionCmd.Parse(os.Args[2:])
 
-		service := getsession.New(openf1Client)
+		fileCache := &cache.FileCache{Dir: "../../.pitwall_cache"}
+
+		service := getsession.New(openf1Client, fileCache)
 		s, err := service.GetSession(ctx, *country, *session_type, *session_year)
 		if err != nil {
 			fmt.Println("error:", err)
 			return
 		}
 
-		if s == nil {
+		if s.Session == nil {
 			fmt.Println("No sessions found.")
 			return
 		}
 
-		fmt.Printf("%s - %s (%s)\n", s.SessionName, s.CircuitName, s.CountryName)
-		fmt.Printf("Starts: %s (UTC)\n", s.DateStart.Format(time.RFC1123))
+		if s.Session != nil && s.Warning != "" {
+			fmt.Println(s.Warning)
+		}
+
+		fmt.Printf("%s - %s (%s)\n", s.Session.SessionName, s.Session.CircuitName, s.Session.CountryName)
+		fmt.Printf("Starts: %s (UTC)\n", s.Session.DateStart.Format(time.RFC1123))
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
